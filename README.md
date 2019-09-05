@@ -1,2 +1,2 @@
 # TDT4173 - Maskinlæring
-Kode og øvinger for TDT4173 høst 2019.
+Code and assignments for TDT4173 fall 2019.
