@@ -1,0 +1,7 @@
+ ;Patient #7;Patient #2;Patient #3;Patient #10; 
+Similarity;1.0;0.89;0.89;0.86; 
+gender;male;unknown;female;male; 
+height;176;180;170;210; 
+name;Thomas Lindberg;Ali Baba;Kari Nordmann;Høy Mann; 
+sleep_quality;medium;medium;medium;low; 
+weight;79;80;70;100; 

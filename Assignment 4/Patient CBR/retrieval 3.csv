@@ -1,0 +1,7 @@
+ ;Patient #3;Patient #7;Patient #2;Patient #8; 
+Similarity;1.0;0.89;0.89;0.86; 
+gender;female;male;unknown;female; 
+height;170;176;180;169; 
+name;Kari Nordmann;Thomas Lindberg;Ali Baba;Catalina Palm; 
+sleep_quality;medium;medium;medium;low; 
+weight;70;79;80;78; 
