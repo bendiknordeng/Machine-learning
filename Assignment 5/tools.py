@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 import os
 from sklearn.preprocessing import StandardScaler
@@ -35,25 +36,95 @@ def top_predictions(clf, frd, image, n):
     preds_idx = np.argsort(-preds, axis = 1)
     probs = []
     for p in preds_idx[0][:n]:
-        probs.append([clf.classes_[p], str(round(preds[0][p]*100,2))+'%'])
+        probs.append([clf.classes_[p], preds[0][p]])
     return probs
 
 def flatten_img(image):
     return [float(i) for line in image for i in line]
 
-def sliding_window(image, stepSize, windowSize):
-    windows = []
-    flattened = []
-    # slide a window across the image
-    for y in range(0, image.shape[0], stepSize[1]):
-        for x in range(0, image.shape[1], stepSize[0]):
-            window = img[y:(y+windowSize[1]),x:(x+windowSize[0])]
-            flat = flatten_img(window)
-            unique, counts = np.unique(flat, return_counts=True)
-            if dict(zip(unique, counts))[255.0] < 250: # Large parts of window white
-                windows.append(window)
-                flattened.append(flat)
-    return np.array(windows), np.array(flattened)
+def bad_image(img):
+    # All white = bad
+    if np.sum(img) == 255 * len(img):
+        return True
+
+    column_whites = np.zeros(20)
+    row_whites = np.zeros(20)
+
+    col_seq_length = 0
+    row_seq_length = 0
+
+    # Check if there is any pair of columns that are mostly white, indicates a spacing between letters/bad box
+    for i in range(20):
+        column_whites[i] = sum([img[j] == 255 for j in range(i, 400, 20)]) >= 15
+        if column_whites[i]:
+            col_seq_length += 1
+            if col_seq_length > 0:
+                return True
+        else:
+            col_seq_length = 0
+
+    # Check if there is any pair of rows that are mostly white, indicates a spacing between letters/bad box
+    for i in range(20):
+        row_whites[i] = sum([p == 255 for p in img[40*i:40*(i+1)]]) >= 15
+        if row_whites[i]:
+            row_seq_length += 1
+            if row_seq_length > 0:
+                return True
+        else:
+            row_seq_length = 0
+
+    return False
+
+
+def sliding_window(clf, image, scaler, pca, window_size=20, stride=1):
+    predictions = dict()
+    image_x, image_y = image.shape
+    ignore_to_x = False
+    reset_y = 41
+
+    for y in range(20, image_y-2*window_size, stride):
+        for x in range(20, image_x-window_size, stride):
+
+            # Flags to ignore if we have set a box already
+            if ignore_to_x and ignore_to_x > x:
+                if reset_y == y:
+                    ignore_to_x = False
+                else:
+                    continue
+            elif ignore_to_x:
+                ignore_to_x = False
+
+            # Extracts a window by using cropping
+            cropp = image[x:x+window_size,y:y+window_size]
+            cropped_image = np.reshape(cropp, window_size*window_size)
+
+            # Check this box to see if should be classified
+            if bad_image(cropped_image):
+                continue
+ 
+            # Make prediction from model and save logit-value as well as character predicted
+            img = scaler.transform([cropped_image])
+            img = pca.transform(img)[0]
+            p = top_predictions(clf,[img],0,1)[0]
+            char = p[0]
+
+            # Check if above threshold for classification
+            ignore_to_x = x + 20
+            reset_y = y + 1
+            predictions[(x, y)] = char
+    
+    return predictions
+
+def plot_prediction_windows(image, predictions, plot_size=(5,5), window_size=20):
+    fig,ax = plt.subplots(1, figsize=plot_size)
+    ax.imshow(image, cmap='gray', interpolation="nearest")
+    
+    for xy, c in predictions.items():
+        rect = patches.Rectangle((xy[1]-1,xy[0]-1),window_size,window_size,linewidth=1,edgecolor='g',facecolor='none')
+        ax.add_patch(rect)
+        ax.text(xy[1]+window_size/2-1, xy[0]+30, c)
+
+    plt.show()
 
 def SVM(X_train, y_train):
     clf = svm.SVC(gamma = 0.001, C=10, probability=True)
