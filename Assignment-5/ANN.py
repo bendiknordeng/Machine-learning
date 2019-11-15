@@ -16,7 +16,6 @@ X_train, X_test, y_train, y_test = train_test_split(feature_reduced_data, target
 
 params = {'hidden_layer_sizes': [pow(10,x) for x in range(4)], 'alpha': [0.01,0.001, 0.0001, 0.00001]}
 
-"""
 cv = GridSearchCV(param_grid=params, estimator=MLPClassifier(random_state=10), cv=10, n_jobs=-1)
 cv.fit(X_train, y_train)
 
@@ -24,7 +23,7 @@ print("Train accuracy:", cv.score(X_train, y_train))
 print("Test accuracy:", cv.score(X_test, y_test))
 
 print(cv.best_params_)
-"""
+
 clf = MLPClassifier(hidden_layer_sizes=1000,alpha=0.001, max_iter=1000)
 clf.fit(X_train, y_train)
 print("Train accuracy:",clf.score(X_train, y_train))
