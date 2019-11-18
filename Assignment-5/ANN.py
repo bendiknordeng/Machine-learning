@@ -25,7 +25,7 @@ def main():
     scaled_X_test = scaler.transform(X_test)
     reduced_X_test = pca.transform(scaled_X_test)
 
-    print("Test accuracy:", cv.score(X_test, y_test))
+    print("Test accuracy:", cv.score(reduced_X_test, y_test))
 
     print(cv.best_params_)
 
